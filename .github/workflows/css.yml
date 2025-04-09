@@ -1,20 +1,37 @@
-name: Desplegar CSS y HTML en GitHub Pages
+name: Validar CSS con Stylelint
 
 on:
   push:
-    branches:
-      - main  # Cambia si tu rama principal no es 'main'
+    paths:
+      - '**/*.css'
+  pull_request:
+    paths:
+      - '**/*.css'
 
 jobs:
-  deploy:
+  lint-css:
+    name: Lint CSS
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout del repositorio
+      - name: Clonar el repositorio
         uses: actions/checkout@v3
 
-      - name: Configurar GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Instalar Node.js
+        uses: actions/setup-node@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./  # Publica desde la raíz (ajusta si tienes carpeta `dist` o `build`)
+          node-version: '18'
+
+      - name: Instalar Stylelint
+        run: npm install stylelint stylelint-config-standard --save-dev
+
+      - name: Crear configuración de Stylelint (si no existe)
+        run: |
+          if [ ! -f .stylelintrc.json ]; then
+            echo '{
+              "extends": "stylelint-config-standard"
+            }' > .stylelintrc.json
+          fi
+
+      - name: Ejecutar Stylelint
+        run: npx stylelint "**/*.css"
